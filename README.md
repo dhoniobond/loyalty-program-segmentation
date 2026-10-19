@@ -57,7 +57,8 @@ The Python scripts in `src/` cover EDA, clustering and the response models. The 
 ├── src/
 │   ├── 01_eda_and_clustering.py              EDA, k-means and hierarchical clustering
 │   ├── 02_segmentation_and_response_model.py segment profiles + logistic regression
-│   └── 03_response_model_numeric_features.py logistic regression on numeric features only
+│   ├── 03_response_model_numeric_features.py logistic regression on numeric features only
+│   └── Proj Code- Numerical variable LR (1).txt
 └── requirements.txt
 ```
 
