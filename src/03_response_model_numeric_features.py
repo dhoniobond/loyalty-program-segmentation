@@ -1,25 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Apr 15 14:30:45 2023
+JCD loyalty program: response model on numeric features only.
 
-@author: neeti
-"""
+Same pipeline as 02_segmentation_and_response_model.py, but drops the
+categorical columns (profession, gender, marital and residence status)
+and predicts promotion response from shopping behaviour alone.
 
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 31 20:48:46 2023
-
-@author: danush
+Run from the repository root with customer-data.csv in data/.
 """
 #importing libraries
 import pandas as pd
 import numpy as np
-from os import chdir
+from pathlib import Path
 
-chdir('C:\\Users\\neeti\\OneDrive\\Desktop\\Laptop Backup\\Desktop\\Northeastern University\\Spring 23\\Data Modeling for Business\\Project')
+# Customer data lives in data/ (not committed)
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 #reading csv
-df=pd.read_csv('customer-data.csv')
+df=pd.read_csv(DATA_DIR / 'customer-data.csv')
 
 #descriptive statistics
 df.head()
@@ -118,7 +115,7 @@ km4.fit(scaled_df)
 df['labels']=km4.labels_
 df4=df.groupby('labels').mean()
 
-df4.to_csv('ClusterGroups.csv')
+df4.to_csv(DATA_DIR / 'cluster_groups.csv')
 
 clustercounts= df['labels'].value_counts()
 #Cluster 0= 28949, Cluster 1= 10,624, Cluster 2= 29,338, Cluster 3= 33,628
@@ -216,11 +213,11 @@ logmodel=LogisticRegression(solver='saga')
 # f1_score(y_test, y_pred)
 
 #performing feature selection using backward selection method to select important x variables 
-'''include why we chose this method'''
+# Backward elimination starts with every feature and drops the least useful one each round
 
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 
-'''' input max value of k features depending on number of variables in x train ''''
+# Set the upper bound of k_features to the number of columns in x_train
 sfs = SFS(logmodel, 
           k_features=(1,29), 
           forward=False, 

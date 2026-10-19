@@ -1,25 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Apr 15 14:30:45 2023
+JCD loyalty program: customer segmentation and response model.
 
-@author: neeti
-"""
+Profiles 2-6 cluster k-means solutions by demographics, keeps the
+2-cluster split, then predicts promotion response (response_flag) with
+logistic regression and backward feature selection.
 
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 31 20:48:46 2023
-
-@author: danush
+Run from the repository root with customer-data.csv in data/.
 """
 #importing libraries
 import pandas as pd
 import numpy as np
-from os import chdir
+from pathlib import Path
 
-chdir('C:\\Users\\neeti\\OneDrive\\Desktop\\Laptop Backup\\Desktop\\Northeastern University\\Spring 23\\Data Modeling for Business\\Project')
+# Customer data lives in data/ (not committed)
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 #reading csv
-df=pd.read_csv('customer-data.csv')
+df=pd.read_csv(DATA_DIR / 'customer-data.csv')
 
 #descriptive statistics
 df.head()
@@ -118,7 +115,7 @@ km4.fit(scaled_df)
 df['labels']=km4.labels_
 df4=df.groupby('labels').mean()
 
-df4.to_csv('ClusterGroups.csv')
+df4.to_csv(DATA_DIR / 'cluster_groups.csv')
 
 clustercounts= df['labels'].value_counts()
 #Cluster 0= 28949, Cluster 1= 10,624, Cluster 2= 29,338, Cluster 3= 33,628
@@ -161,37 +158,36 @@ residenceperc= df.groupby(['labels','residence_status']).size()/df.groupby('labe
     # Cust income since it has a large number of missing values
     # total_num_purch_L6M since total field is a summation of purchases in apparel, electronics, health and beauty and housewares
     # total_dollars_L6M and basket_margin due to the same logic as above
-    # state, cust profession, gender, marital status, residence status as they are categorical columns and dummy variable creation to  include them in our analysis 
-    #was not an efficient approach. 
+    # State, since one-hot encoding 50+ states would add too many sparse dummy columns
     
 
-df5= df.drop(['cust_id','cust_income','total_num_purch_L6M','total_dollars_L6M','basket_margin', 'state', 'cust_profession', 'gender', 'marital_status','residence_status'], axis=1)
+df5= df.drop(['cust_id','cust_income','total_num_purch_L6M','total_dollars_L6M','basket_margin', 'state'], axis=1)
 
 
-# #creating dummy variables for categorical x variables included in our analysis
+#creating dummy variables for categorical x variables included in our analysis
 
-# df5=pd.get_dummies(df5, drop_first=True)
+df5=pd.get_dummies(df5, drop_first=True)
 
-# df5.dtypes
+df5.dtypes
 
-# df5 = df5.astype({"cust_profession_OTHER" : 'float64','cust_profession_SALARIED' :'float64','cust_profession_SELF EMPLOYED' : 'float64',
-# 'cust_profession_STUDENT'  : 'float64', 'cust_profession_UNEMPLOYED' :'float64','gender_M' : 'float64','marital_status_Married' :'float64','marital_status_Single' : 'float64',
-# 'marital_status_Unknown': 'float64','residence_status_Other' : 'float64','residence_status_Rental':'float64','residence_status_Unknown' :'float64'})
+df5 = df5.astype({"cust_profession_OTHER" : 'float64','cust_profession_SALARIED' :'float64','cust_profession_SELF EMPLOYED' : 'float64',
+'cust_profession_STUDENT'  : 'float64', 'cust_profession_UNEMPLOYED' :'float64','gender_M' : 'float64','marital_status_Married' :'float64','marital_status_Single' : 'float64',
+'marital_status_Unknown': 'float64','residence_status_Other' : 'float64','residence_status_Rental':'float64','residence_status_Unknown' :'float64'})
 
 
 # df5 = df5.astype({"cust_profession_OTHER" : 'int64','cust_profession_SALARIED' :'int64','cust_profession_SELF EMPLOYED' : 'int64',
-# # 'cust_profession_STUDENT'  : 'int64', 'cust_profession_UNEMPLOYED' :'int64','gender_M' : 'int64','marital_status_Married' :'int64','marital_status_Single' : 'int64',
-# # 'marital_status_Unknown': 'int64','residence_status_Other' : 'int64','residence_status_Rental':'int64','residence_status_Unknown' :'int64'})
-# # identify columns that contain unexpected values
-# non_numerical_rows = df5.apply(lambda row: any([isinstance(val, str) for val in row.values]), axis=1)
+# 'cust_profession_STUDENT'  : 'int64', 'cust_profession_UNEMPLOYED' :'int64','gender_M' : 'int64','marital_status_Married' :'int64','marital_status_Single' : 'int64',
+# 'marital_status_Unknown': 'int64','residence_status_Other' : 'int64','residence_status_Rental':'int64','residence_status_Unknown' :'int64'})
+# identify columns that contain unexpected values
+non_numerical_rows = df5.apply(lambda row: any([isinstance(val, str) for val in row.values]), axis=1)
 
-# # print out any non-numerical rows
-# print(df[non_numerical_rows])
+# print out any non-numerical rows
+print(df[non_numerical_rows])
 
-# #data scaling
-# scaler=MinMaxScaler() #initialize
-# scaler.fit(df5)
-# scaled_df=scaler.transform(df5)
+#data scaling
+scaler=MinMaxScaler() #initialize
+scaler.fit(df5)
+scaled_df=scaler.transform(df5)
 
 
 
@@ -216,11 +212,10 @@ logmodel=LogisticRegression(solver='saga')
 # f1_score(y_test, y_pred)
 
 #performing feature selection using backward selection method to select important x variables 
-'''include why we chose this method'''
+# Backward elimination starts with every feature and drops the least useful one each round
 
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 
-'''' input max value of k features depending on number of variables in x train ''''
 sfs = SFS(logmodel, 
           k_features=(1,29), 
           forward=False, 

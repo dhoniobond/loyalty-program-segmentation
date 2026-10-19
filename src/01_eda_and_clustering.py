@@ -1,14 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Mar 31 20:48:46 2023
+JCD loyalty program: exploratory analysis and customer clustering.
 
-@author: danush
+Compares promotion responders vs. non-responders, scales the numeric
+shopping features, and tests k-means (elbow + silhouette) and
+hierarchical (Ward) clustering.
+
+Run from the repository root with customer-data.csv in data/.
 """
 #importing libraries
 import pandas as pd
 import numpy as np
+from pathlib import Path
+
+# Customer data lives in data/ (not committed)
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+
 #reading csv
-df=pd.read_csv('customer-data.csv')
+df=pd.read_csv(DATA_DIR / 'customer-data.csv')
 
 #descriptive statistics
 df.head()
@@ -115,7 +123,7 @@ scaled_df=scaler.fit_transform(df3)
 linked = linkage(scaled_df, 'ward')#gets a n-1 *4 matrix
 dendrogram(linked) #uses the matrix to get to draw the dendrogram
 plt.title("Dendrogram")
-plt.xlabel('Food')
+plt.xlabel('Customers')
 plt.ylabel('euclidean')
 plt.show()
 
